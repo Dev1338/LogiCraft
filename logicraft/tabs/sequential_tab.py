@@ -4,14 +4,27 @@ Tab 4 — Sequential Logic UI.
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox,
-    QLabel, QComboBox, QPushButton, QLineEdit, QTableWidget,
-    QTableWidgetItem, QScrollArea, QFileDialog, QSpinBox,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QSplitter,
+    QGroupBox,
+    QLabel,
+    QComboBox,
+    QPushButton,
+    QLineEdit,
+    QTableWidget,
+    QTableWidgetItem,
+    QScrollArea,
+    QFileDialog,
+    QSpinBox,
 )
 from logicraft.canvas import MplCanvas
-from logicraft.widgets import TonalSeparator
 from logicraft.engines.sequential_engine import (
-    get_state_table, simulate, parse_input_string, TimingResult,
+    get_state_table,
+    simulate,
+    parse_input_string,
+    TimingResult,
 )
 
 
@@ -144,6 +157,7 @@ class SequentialTab(QWidget):
 
     def _draw_timing(self, result: TimingResult):
         from logicraft.theme import get_palette
+
         p = get_palette(self._dark)
         ax = self.canvas.axes
         ax.clear()
@@ -198,17 +212,24 @@ class SequentialTab(QWidget):
         for idx, (name, sig) in enumerate(signals.items()):
             a = axes[idx]
             color = colors.get(name, p.on_surface)
-            a.step(t, sig, where='post', color=color, linewidth=2)
+            a.step(t, sig, where="post", color=color, linewidth=2)
             if name == "Q":
-                a.fill_between(t, sig, step='post', alpha=0.15, color=color)
-            a.set_ylabel(name, fontsize=11, fontweight='bold', color=color, rotation=0, labelpad=30)
+                a.fill_between(t, sig, step="post", alpha=0.15, color=color)
+            a.set_ylabel(
+                name,
+                fontsize=11,
+                fontweight="bold",
+                color=color,
+                rotation=0,
+                labelpad=30,
+            )
             a.set_ylim(-0.2, 1.4)
             a.set_yticks([0, 1])
             a.set_yticklabels(["0", "1"], fontsize=9)
-            a.spines['top'].set_visible(False)
-            a.spines['right'].set_visible(False)
-            a.spines['left'].set_color(p.outline_variant)
-            a.spines['bottom'].set_color(p.outline_variant)
+            a.spines["top"].set_visible(False)
+            a.spines["right"].set_visible(False)
+            a.spines["left"].set_color(p.outline_variant)
+            a.spines["bottom"].set_color(p.outline_variant)
             a.tick_params(colors=p.on_surface_variant, labelsize=9)
             a.set_facecolor(self.canvas.fig.get_facecolor())
 
@@ -219,20 +240,30 @@ class SequentialTab(QWidget):
                     a.axvspan(x_start, x_start + 1, color="#ba1a1a", alpha=0.12)
 
         axes[-1].set_xlabel("Clock Cycle", fontsize=11, color=p.on_surface)
-        axes[0].set_title(f"{result.ff_type} Flip-Flop Timing Diagram", fontsize=13,
-                          fontweight='bold', color=p.on_surface, pad=8)
-        self.canvas.fig.subplots_adjust(hspace=0.15, left=0.12, right=0.96, top=0.92, bottom=0.08)
+        axes[0].set_title(
+            f"{result.ff_type} Flip-Flop Timing Diagram",
+            fontsize=13,
+            fontweight="bold",
+            color=p.on_surface,
+            pad=8,
+        )
+        self.canvas.fig.subplots_adjust(
+            hspace=0.15, left=0.12, right=0.96, top=0.92, bottom=0.08
+        )
         self.canvas.draw()
 
     def _export_csv(self):
         if not self._last_result:
             return
         import csv
-        path, _ = QFileDialog.getSaveFileName(self, "Export Log", "timing_log.csv", "CSV (*.csv)")
+
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Log", "timing_log.csv", "CSV (*.csv)"
+        )
         if not path:
             return
         res = self._last_result
-        with open(path, 'w', newline='') as f:
+        with open(path, "w", newline="") as f:
             w = csv.writer(f)
             headers = ["Cycle"] + res.input_names + ["Q_before", "Q_after", "Invalid"]
             w.writerow(headers)

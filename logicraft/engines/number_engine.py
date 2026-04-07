@@ -10,6 +10,7 @@ from dataclasses import dataclass
 @dataclass
 class ConversionResult:
     """All-base representation of a value."""
+
     value: int
     bit_width: int
     binary: str
@@ -17,7 +18,7 @@ class ConversionResult:
     decimal: str
     signed_decimal: str
     hexadecimal: str
-    bits: list[int]        # MSB-first
+    bits: list[int]  # MSB-first
     set_positions: list[int]  # indices (from MSB=0) that are 1
 
     @property
@@ -44,7 +45,9 @@ def convert(value: int, bit_width: int) -> ConversionResult:
         octal=format(v, "o"),
         decimal=str(v),
         signed_decimal=str(signed_val),
-        hexadecimal=format(v, f"0{bit_width // 4}X") if bit_width % 4 == 0 else format(v, "X"),
+        hexadecimal=format(v, f"0{bit_width // 4}X")
+        if bit_width % 4 == 0
+        else format(v, "X"),
         bits=bits,
         set_positions=set_pos,
     )
@@ -64,6 +67,7 @@ def parse_value(text: str, base: int) -> int | None:
 
 
 # ── Two's complement walk-through ────────────────────────────────────────────
+
 
 @dataclass
 class TwosComplementSteps:
@@ -94,7 +98,9 @@ def twos_complement_analysis(value: int, bit_width: int) -> TwosComplementSteps:
         sign_bit=sign,
         magnitude_binary=format(v, f"0{bit_width}b"),
         inverted_binary=format((~v) & mask, f"0{bit_width}b"),
-        after_add_one=format(((~v) & mask) + 1 & mask, f"0{bit_width}b") if sign else format(v, f"0{bit_width}b"),
+        after_add_one=format(((~v) & mask) + 1 & mask, f"0{bit_width}b")
+        if sign
+        else format(v, f"0{bit_width}b"),
         signed_value=signed_val,
         bit_width=bit_width,
     )
@@ -102,12 +108,13 @@ def twos_complement_analysis(value: int, bit_width: int) -> TwosComplementSteps:
 
 # ── IEEE 754 single-precision ────────────────────────────────────────────────
 
+
 @dataclass
 class IEEE754Result:
     sign_bit: int
-    exponent_bits: list[int]     # 8 bits
-    mantissa_bits: list[int]     # 23 bits
-    all_bits: list[int]          # 32 bits
+    exponent_bits: list[int]  # 8 bits
+    mantissa_bits: list[int]  # 23 bits
+    all_bits: list[int]  # 32 bits
     biased_exponent: int
     actual_exponent: int
     mantissa_fraction: float
@@ -115,7 +122,7 @@ class IEEE754Result:
     decimal_value: float
     hex_repr: str
     is_special: bool
-    special_name: str            # "NaN", "Inf", "-Inf", "Zero", etc.
+    special_name: str  # "NaN", "Inf", "-Inf", "Zero", etc.
 
 
 def ieee754_encode(value: float) -> IEEE754Result:
@@ -154,7 +161,9 @@ def ieee754_encode(value: float) -> IEEE754Result:
             # denormalized
             formula = f"(-1)^{sign} × 0.{''.join(map(str, mant_bits))} × 2^(-126)"
     else:
-        formula = f"(-1)^{sign} × 1.{''.join(map(str, mant_bits[:8]))}... × 2^({actual_exp})"
+        formula = (
+            f"(-1)^{sign} × 1.{''.join(map(str, mant_bits[:8]))}... × 2^({actual_exp})"
+        )
 
     return IEEE754Result(
         sign_bit=sign,
@@ -172,7 +181,8 @@ def ieee754_encode(value: float) -> IEEE754Result:
     )
 
 
-# ── Base conversion step-by-step explainer ────────────────────────────────────
+# ── Base conversion step-by-step explainer ──────────────────────────────
+
 
 def base_conversion_steps(value: int, from_base: int, to_base: int) -> list[str]:
     """Return human-readable step-by-step conversion from one base to another."""
@@ -189,14 +199,16 @@ def base_conversion_steps(value: int, from_base: int, to_base: int) -> list[str]
         parts = []
         for i, d in enumerate(digits):
             dv = int(d, 36)
-            parts.append(f"{d}×{from_base}^{i} = {dv * (from_base ** i)}")
+            parts.append(f"{d}×{from_base}^{i} = {dv * (from_base**i)}")
         steps.append("  " + " + ".join(reversed(parts)))
         steps.append(f"  = {value} (decimal)")
     else:
         steps.append(f"Starting value: {value} (decimal)")
 
     if to_base != 10:
-        steps.append(f"Step 2: Convert decimal {value} to base-{to_base} (repeated division)")
+        steps.append(
+            f"Step 2: Convert decimal {value} to base-{to_base} (repeated division)"
+        )
         v = value
         remainders = []
         if v == 0:
@@ -227,4 +239,4 @@ def _int_to_base_str(val: int, base: int) -> str:
 def _digit_char(d: int) -> str:
     if d < 10:
         return str(d)
-    return chr(ord('A') + d - 10)
+    return chr(ord("A") + d - 10)

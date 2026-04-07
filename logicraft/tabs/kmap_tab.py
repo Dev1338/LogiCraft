@@ -4,12 +4,20 @@ Tab 3 — Gates & K-Map UI.
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox,
-    QLabel, QComboBox, QPushButton, QTableWidget, QTableWidgetItem,
-    QScrollArea, QFileDialog,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QSplitter,
+    QGroupBox,
+    QLabel,
+    QComboBox,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QScrollArea,
+    QFileDialog,
 )
 from logicraft.canvas import MplCanvas
-from logicraft.widgets import TonalSeparator
 from logicraft.engines.kmap_engine import solve
 
 
@@ -147,6 +155,7 @@ class KMapTab(QWidget):
     def _draw_kmap(self, res):
         from logicraft.theme import get_palette
         import matplotlib.patches as mpatches
+
         p = get_palette(self._dark)
         ax = self.canvas.axes
         ax.clear()
@@ -160,21 +169,54 @@ class KMapTab(QWidget):
                 x, y = c * cell, (rows - 1 - r) * cell
                 val = res.kmap_grid[r][c]
                 fc = p.surface_container_lowest
-                ax.add_patch(mpatches.FancyBboxPatch(
-                    (x, y), cell, cell, boxstyle="round,pad=0.03",
-                    facecolor=fc, edgecolor=p.outline_variant, linewidth=1
-                ))
+                ax.add_patch(
+                    mpatches.FancyBboxPatch(
+                        (x, y),
+                        cell,
+                        cell,
+                        boxstyle="round,pad=0.03",
+                        facecolor=fc,
+                        edgecolor=p.outline_variant,
+                        linewidth=1,
+                    )
+                )
                 color = p.on_surface if val != "X" else p.error
-                ax.text(x + cell/2, y + cell/2, val, ha='center', va='center',
-                        fontsize=16, fontweight='bold', color=color, fontfamily='monospace')
+                ax.text(
+                    x + cell / 2,
+                    y + cell / 2,
+                    val,
+                    ha="center",
+                    va="center",
+                    fontsize=16,
+                    fontweight="bold",
+                    color=color,
+                    fontfamily="monospace",
+                )
 
         # Labels
         for c, lbl in enumerate(res.col_labels):
-            ax.text(c * cell + cell/2, rows * cell + 0.2, lbl, ha='center',
-                    fontsize=10, color=p.secondary, fontweight='bold', fontfamily='monospace')
+            ax.text(
+                c * cell + cell / 2,
+                rows * cell + 0.2,
+                lbl,
+                ha="center",
+                fontsize=10,
+                color=p.secondary,
+                fontweight="bold",
+                fontfamily="monospace",
+            )
         for r, lbl in enumerate(res.row_labels):
-            ax.text(-0.3, (rows - 1 - r) * cell + cell/2, lbl, ha='right', va='center',
-                    fontsize=10, color=p.secondary, fontweight='bold', fontfamily='monospace')
+            ax.text(
+                -0.3,
+                (rows - 1 - r) * cell + cell / 2,
+                lbl,
+                ha="right",
+                va="center",
+                fontsize=10,
+                color=p.secondary,
+                fontweight="bold",
+                fontfamily="monospace",
+            )
 
         # Draw groups
         for imp, color in res.groups:
@@ -200,36 +242,57 @@ class KMapTab(QWidget):
                 y = (rows - 1 - max_r) * cell - 0.08
                 w = (max_c - min_c + 1) * cell + 0.16
                 h = (max_r - min_r + 1) * cell + 0.16
-                ax.add_patch(mpatches.FancyBboxPatch(
-                    (x, y), w, h, boxstyle="round,pad=0.08",
-                    facecolor=color + "20", edgecolor=color, linewidth=2
-                ))
+                ax.add_patch(
+                    mpatches.FancyBboxPatch(
+                        (x, y),
+                        w,
+                        h,
+                        boxstyle="round,pad=0.08",
+                        facecolor=color + "20",
+                        edgecolor=color,
+                        linewidth=2,
+                    )
+                )
 
         ax.set_xlim(-0.8, cols * cell + 0.5)
         ax.set_ylim(-0.5, rows * cell + 0.6)
-        ax.set_aspect('equal')
-        ax.axis('off')
-        ax.set_title(f"{self._n_vars}-Variable Karnaugh Map", fontsize=13,
-                     fontweight='bold', color=p.on_surface, pad=10)
+        ax.set_aspect("equal")
+        ax.axis("off")
+        ax.set_title(
+            f"{self._n_vars}-Variable Karnaugh Map",
+            fontsize=13,
+            fontweight="bold",
+            color=p.on_surface,
+            pad=10,
+        )
 
         # Legend
         for i, (imp, color) in enumerate(res.groups):
-            var_names = [chr(65+j) for j in range(self._n_vars)]
+            var_names = [chr(65 + j) for j in range(self._n_vars)]
             expr = imp.to_expr(var_names)
-            ax.text(cols * cell + 0.6, (rows - 1) * cell - i * 0.5, f"■ {expr}",
-                    fontsize=10, color=color, fontweight='bold')
+            ax.text(
+                cols * cell + 0.6,
+                (rows - 1) * cell - i * 0.5,
+                f"■ {expr}",
+                fontsize=10,
+                color=color,
+                fontweight="bold",
+            )
 
         self.canvas.fig.tight_layout()
         self.canvas.draw()
 
     def _export_csv(self):
         import csv
-        path, _ = QFileDialog.getSaveFileName(self, "Export Truth Table", "truth_table.csv", "CSV (*.csv)")
+
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Truth Table", "truth_table.csv", "CSV (*.csv)"
+        )
         if not path:
             return
         n = self._n_vars
         var_names = [chr(65 + i) for i in range(n)]
-        with open(path, 'w', newline='') as f:
+        with open(path, "w", newline="") as f:
             writer = csv.writer(f)
             writer.writerow(var_names + ["F"])
             for r in range(1 << n):

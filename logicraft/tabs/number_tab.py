@@ -4,15 +4,26 @@ Tab 2 — Number Systems UI.
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox,
-    QLabel, QLineEdit, QComboBox, QPushButton, QTextEdit,
-    QScrollArea, QFrame,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QSplitter,
+    QGroupBox,
+    QLabel,
+    QLineEdit,
+    QComboBox,
+    QPushButton,
+    QTextEdit,
+    QScrollArea,
 )
 from logicraft.canvas import MplCanvas
 from logicraft.widgets import TonalSeparator
 from logicraft.engines.number_engine import (
-    convert, parse_value, twos_complement_analysis,
-    ieee754_encode, base_conversion_steps,
+    convert,
+    parse_value,
+    twos_complement_analysis,
+    ieee754_encode,
+    base_conversion_steps,
 )
 
 
@@ -43,8 +54,12 @@ class NumberTab(QWidget):
         base_row = QHBoxLayout()
         base_row.addWidget(QLabel("Base:"))
         self._base_combo = QComboBox()
-        for b_name, b_val in [("Binary (2)", 2), ("Octal (8)", 8),
-                               ("Decimal (10)", 10), ("Hex (16)", 16)]:
+        for b_name, b_val in [
+            ("Binary (2)", 2),
+            ("Octal (8)", 8),
+            ("Decimal (10)", 10),
+            ("Hex (16)", 16),
+        ]:
             self._base_combo.addItem(b_name, b_val)
         self._base_combo.setCurrentIndex(2)
         base_row.addWidget(self._base_combo)
@@ -80,7 +95,9 @@ class NumberTab(QWidget):
         self._tc_text = QTextEdit()
         self._tc_text.setReadOnly(True)
         self._tc_text.setMaximumHeight(140)
-        self._tc_text.setStyleSheet("font-family:'Courier New',monospace; font-size:12px;")
+        self._tc_text.setStyleSheet(
+            "font-family:'Courier New',monospace; font-size:12px;"
+        )
         tc_lay.addWidget(self._tc_text)
         left.addWidget(tc_group)
 
@@ -92,7 +109,9 @@ class NumberTab(QWidget):
         self._steps_text = QTextEdit()
         self._steps_text.setReadOnly(True)
         self._steps_text.setMaximumHeight(120)
-        self._steps_text.setStyleSheet("font-family:'Courier New',monospace; font-size:11px;")
+        self._steps_text.setStyleSheet(
+            "font-family:'Courier New',monospace; font-size:11px;"
+        )
         self._steps_text.hide()
         left.addWidget(self._steps_text)
 
@@ -114,7 +133,9 @@ class NumberTab(QWidget):
         self._ieee_text = QTextEdit()
         self._ieee_text.setReadOnly(True)
         self._ieee_text.setMaximumHeight(100)
-        self._ieee_text.setStyleSheet("font-family:'Courier New',monospace; font-size:11px;")
+        self._ieee_text.setStyleSheet(
+            "font-family:'Courier New',monospace; font-size:11px;"
+        )
         ieee_lay.addWidget(self._ieee_text)
         left.addWidget(ieee_group)
 
@@ -176,6 +197,7 @@ class NumberTab(QWidget):
 
     def _draw_bits(self, res):
         from logicraft.theme import get_palette
+
         p = get_palette(self._dark)
         ax = self.canvas.axes
         ax.clear()
@@ -194,28 +216,65 @@ class NumberTab(QWidget):
             else:
                 color = p.surface_container_high
 
-            ax.add_patch(__import__('matplotlib.patches', fromlist=['FancyBboxPatch']).FancyBboxPatch(
-                (x, 0), cell, cell, boxstyle="round,pad=0.04",
-                facecolor=color, edgecolor=p.outline_variant, linewidth=1
-            ))
+            ax.add_patch(
+                __import__(
+                    "matplotlib.patches", fromlist=["FancyBboxPatch"]
+                ).FancyBboxPatch(
+                    (x, 0),
+                    cell,
+                    cell,
+                    boxstyle="round,pad=0.04",
+                    facecolor=color,
+                    edgecolor=p.outline_variant,
+                    linewidth=1,
+                )
+            )
             text_color = "#ffffff" if (bit or i == 0) else p.on_surface
-            ax.text(x + cell/2, cell/2, str(bit), ha='center', va='center',
-                    fontsize=16, fontweight='bold', color=text_color, fontfamily='monospace')
+            ax.text(
+                x + cell / 2,
+                cell / 2,
+                str(bit),
+                ha="center",
+                va="center",
+                fontsize=16,
+                fontweight="bold",
+                color=text_color,
+                fontfamily="monospace",
+            )
 
             if bit:
                 power = n - 1 - i
-                ax.text(x + cell/2, cell + 0.2, f"2^{power}={2**power}",
-                        ha='center', fontsize=8, color=p.primary, fontweight='bold')
+                ax.text(
+                    x + cell / 2,
+                    cell + 0.2,
+                    f"2^{power}={2**power}",
+                    ha="center",
+                    fontsize=8,
+                    color=p.primary,
+                    fontweight="bold",
+                )
 
-            ax.text(x + cell/2, -0.2, str(n - 1 - i), ha='center',
-                    fontsize=8, color=p.secondary, fontfamily='monospace')
+            ax.text(
+                x + cell / 2,
+                -0.2,
+                str(n - 1 - i),
+                ha="center",
+                fontsize=8,
+                color=p.secondary,
+                fontfamily="monospace",
+            )
 
         ax.set_xlim(-0.3, total + 0.3)
         ax.set_ylim(-0.6, cell + 0.6)
-        ax.set_aspect('equal')
-        ax.axis('off')
-        ax.set_title(f"{n}-Bit Register Visualization", fontsize=13,
-                     fontweight='bold', color=p.on_surface, pad=10)
+        ax.set_aspect("equal")
+        ax.axis("off")
+        ax.set_title(
+            f"{n}-Bit Register Visualization",
+            fontsize=13,
+            fontweight="bold",
+            color=p.on_surface,
+            pad=10,
+        )
         self.canvas.fig.tight_layout()
         self.canvas.draw()
 
@@ -240,7 +299,9 @@ class NumberTab(QWidget):
         res = ieee754_encode(fval)
         lines = [
             f"Hex: {res.hex_repr}",
-            f"Sign: {res.sign_bit}  Exponent: {''.join(map(str, res.exponent_bits))} ({res.biased_exponent}, bias={res.actual_exponent})",
+            f"Sign: {res.sign_bit}  Exponent: {''.join(map(str, res.exponent_bits))} ({
+                res.biased_exponent
+            }, bias={res.actual_exponent})",
             f"Mantissa: {''.join(map(str, res.mantissa_bits))}",
             f"Formula: {res.formula}",
         ]
@@ -251,6 +312,7 @@ class NumberTab(QWidget):
 
     def _draw_ieee(self, res):
         from logicraft.theme import get_palette
+
         p = get_palette(self._dark)
         ax = self.canvas.axes
         ax.clear()
@@ -265,22 +327,76 @@ class NumberTab(QWidget):
                 c = p.primary
             else:
                 c = p.tertiary
-            ax.add_patch(__import__('matplotlib.patches', fromlist=['Rectangle']).Rectangle(
-                (x, 0), cell, cell, facecolor=c, edgecolor=p.outline_variant, linewidth=0.5
-            ))
-            ax.text(x + cell/2, cell/2, str(bit), ha='center', va='center',
-                    fontsize=8, color='#ffffff', fontweight='bold', fontfamily='monospace')
+            ax.add_patch(
+                __import__("matplotlib.patches", fromlist=["Rectangle"]).Rectangle(
+                    (x, 0),
+                    cell,
+                    cell,
+                    facecolor=c,
+                    edgecolor=p.outline_variant,
+                    linewidth=0.5,
+                )
+            )
+            ax.text(
+                x + cell / 2,
+                cell / 2,
+                str(bit),
+                ha="center",
+                va="center",
+                fontsize=8,
+                color="#ffffff",
+                fontweight="bold",
+                fontfamily="monospace",
+            )
 
-        ax.text(0.3, cell + 0.15, "S", ha='center', fontsize=9, color="#ba1a1a", fontweight='bold')
-        ax.text(4.5 * cell, cell + 0.15, "Exponent (8 bits)", ha='center', fontsize=9, color=p.primary, fontweight='bold')
-        ax.text(20 * cell, cell + 0.15, "Mantissa (23 bits)", ha='center', fontsize=9, color=p.tertiary, fontweight='bold')
+        ax.text(
+            0.3,
+            cell + 0.15,
+            "S",
+            ha="center",
+            fontsize=9,
+            color="#ba1a1a",
+            fontweight="bold",
+        )
+        ax.text(
+            4.5 * cell,
+            cell + 0.15,
+            "Exponent (8 bits)",
+            ha="center",
+            fontsize=9,
+            color=p.primary,
+            fontweight="bold",
+        )
+        ax.text(
+            20 * cell,
+            cell + 0.15,
+            "Mantissa (23 bits)",
+            ha="center",
+            fontsize=9,
+            color=p.tertiary,
+            fontweight="bold",
+        )
 
-        ax.text(16 * cell, -0.4, res.formula, ha='center', fontsize=10, color=p.on_surface, fontfamily='monospace')
+        ax.text(
+            16 * cell,
+            -0.4,
+            res.formula,
+            ha="center",
+            fontsize=10,
+            color=p.on_surface,
+            fontfamily="monospace",
+        )
 
         ax.set_xlim(-0.3, 32 * cell + 0.3)
         ax.set_ylim(-0.8, cell + 0.5)
-        ax.set_aspect('equal')
-        ax.axis('off')
-        ax.set_title("IEEE 754 Single Precision", fontsize=13, fontweight='bold', color=p.on_surface, pad=10)
+        ax.set_aspect("equal")
+        ax.axis("off")
+        ax.set_title(
+            "IEEE 754 Single Precision",
+            fontsize=13,
+            fontweight="bold",
+            color=p.on_surface,
+            pad=10,
+        )
         self.canvas.fig.tight_layout()
         self.canvas.draw()

@@ -1,6 +1,7 @@
 """
 FSM data model, simulation, and state minimisation (table-filling).
 """
+
 from __future__ import annotations
 from dataclasses import dataclass, field
 
@@ -98,6 +99,7 @@ def simulate(fsm: FSMDef, input_string: str) -> SimResult:
 
 # ── Presets ──────────────────────────────────────────────────────────────
 
+
 def preset_101_detector() -> FSMDef:
     fsm = FSMDef(mode="Moore", alphabet=["0", "1"])
     fsm.states = [
@@ -107,12 +109,17 @@ def preset_101_detector() -> FSMDef:
         State("S3", "1", is_accept=True, x=3, y=-1),
     ]
     fsm.transitions = [
-        Transition("S0", "S1", "1"), Transition("S0", "S0", "0"),
-        Transition("S1", "S2", "0"), Transition("S1", "S1", "1"),
-        Transition("S2", "S3", "1"), Transition("S2", "S0", "0"),
-        Transition("S3", "S2", "0"), Transition("S3", "S1", "1"),
+        Transition("S0", "S1", "1"),
+        Transition("S0", "S0", "0"),
+        Transition("S1", "S2", "0"),
+        Transition("S1", "S1", "1"),
+        Transition("S2", "S3", "1"),
+        Transition("S2", "S0", "0"),
+        Transition("S3", "S2", "0"),
+        Transition("S3", "S1", "1"),
     ]
     return fsm
+
 
 def preset_mod3_counter() -> FSMDef:
     fsm = FSMDef(mode="Moore", alphabet=["0", "1"])
@@ -122,11 +129,15 @@ def preset_mod3_counter() -> FSMDef:
         State("S2", "2", x=2, y=1),
     ]
     fsm.transitions = [
-        Transition("S0", "S0", "0"), Transition("S0", "S1", "1"),
-        Transition("S1", "S2", "0"), Transition("S1", "S0", "1"),
-        Transition("S2", "S1", "0"), Transition("S2", "S2", "1"),
+        Transition("S0", "S0", "0"),
+        Transition("S0", "S1", "1"),
+        Transition("S1", "S2", "0"),
+        Transition("S1", "S0", "1"),
+        Transition("S2", "S1", "0"),
+        Transition("S2", "S2", "1"),
     ]
     return fsm
+
 
 def preset_even_zeros() -> FSMDef:
     fsm = FSMDef(mode="Moore", alphabet=["0", "1"])
@@ -135,10 +146,13 @@ def preset_even_zeros() -> FSMDef:
         State("Odd", "N", x=2, y=0),
     ]
     fsm.transitions = [
-        Transition("Even", "Odd", "0"), Transition("Even", "Even", "1"),
-        Transition("Odd", "Even", "0"), Transition("Odd", "Odd", "1"),
+        Transition("Even", "Odd", "0"),
+        Transition("Even", "Even", "1"),
+        Transition("Odd", "Even", "0"),
+        Transition("Odd", "Odd", "1"),
     ]
     return fsm
+
 
 PRESETS = {
     "101 Sequence Detector": preset_101_detector,
@@ -148,6 +162,7 @@ PRESETS = {
 
 
 # ── State Minimisation (table-filling) ───────────────────────────────────
+
 
 def minimize_states(fsm: FSMDef) -> FSMDef:
     states = fsm.states
@@ -159,11 +174,11 @@ def minimize_states(fsm: FSMDef) -> FSMDef:
     idx = {s.name: i for i, s in enumerate(states)}
 
     # Build distinguishability table
-    dist = [[False]*n for _ in range(n)]
+    dist = [[False] * n for _ in range(n)]
 
     # Mark pairs with different outputs (Moore) or accept status
     for i in range(n):
-        for j in range(i+1, n):
+        for j in range(i + 1, n):
             if fsm.mode == "Moore":
                 if states[i].output != states[j].output:
                     dist[i][j] = dist[j][i] = True
@@ -174,12 +189,20 @@ def minimize_states(fsm: FSMDef) -> FSMDef:
     while changed:
         changed = False
         for i in range(n):
-            for j in range(i+1, n):
+            for j in range(i + 1, n):
                 if dist[i][j]:
                     continue
                 for sym in fsm.alphabet:
-                    ti = [t for t in fsm.transitions if t.src == names[i] and t.input_symbol == sym]
-                    tj = [t for t in fsm.transitions if t.src == names[j] and t.input_symbol == sym]
+                    ti = [
+                        t
+                        for t in fsm.transitions
+                        if t.src == names[i] and t.input_symbol == sym
+                    ]
+                    tj = [
+                        t
+                        for t in fsm.transitions
+                        if t.src == names[j] and t.input_symbol == sym
+                    ]
                     if not ti or not tj:
                         if bool(ti) != bool(tj):
                             dist[i][j] = dist[j][i] = True
@@ -193,13 +216,13 @@ def minimize_states(fsm: FSMDef) -> FSMDef:
 
     # Group equivalent states
     groups = []
-    assigned = [False]*n
+    assigned = [False] * n
     for i in range(n):
         if assigned[i]:
             continue
         group = [i]
         assigned[i] = True
-        for j in range(i+1, n):
+        for j in range(i + 1, n):
             if not assigned[j] and not dist[i][j]:
                 group.append(j)
                 assigned[j] = True
@@ -210,6 +233,7 @@ def minimize_states(fsm: FSMDef) -> FSMDef:
 
     # Build new FSM
     import math
+
     new_fsm = FSMDef(mode=fsm.mode, alphabet=list(fsm.alphabet))
     group_map = {}
     for gi, group in enumerate(groups):
@@ -218,10 +242,14 @@ def minimize_states(fsm: FSMDef) -> FSMDef:
         for si in group:
             group_map[names[si]] = new_name
         angle = 2 * math.pi * gi / len(groups)
-        ns = State(new_name, rep.output,
-                   is_start=any(states[si].is_start for si in group),
-                   is_accept=any(states[si].is_accept for si in group),
-                   x=2*math.cos(angle), y=2*math.sin(angle))
+        ns = State(
+            new_name,
+            rep.output,
+            is_start=any(states[si].is_start for si in group),
+            is_accept=any(states[si].is_accept for si in group),
+            x=2 * math.cos(angle),
+            y=2 * math.sin(angle),
+        )
         new_fsm.states.append(ns)
 
     seen = set()

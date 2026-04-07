@@ -4,13 +4,22 @@ Tab 6 — Booth's Algorithm UI.
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox,
-    QLabel, QPushButton, QSpinBox, QComboBox, QTableWidget,
-    QTableWidgetItem, QScrollArea, QFileDialog,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QSplitter,
+    QGroupBox,
+    QLabel,
+    QPushButton,
+    QSpinBox,
+    QComboBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QScrollArea,
+    QFileDialog,
 )
 from logicraft.canvas import MplCanvas
-from logicraft.widgets import TonalSeparator
-from logicraft.engines.booth_engine import run_booth, BoothResult
+from logicraft.engines.booth_engine import run_booth
 
 
 class BoothTab(QWidget):
@@ -101,7 +110,9 @@ class BoothTab(QWidget):
         self._result_label = QLabel("Result: —")
         self._result_label.setProperty("class", "mono")
         self._result_label.setWordWrap(True)
-        self._result_label.setStyleSheet("font-size:13px; padding:6px; font-weight:bold;")
+        self._result_label.setStyleSheet(
+            "font-size:13px; padding:6px; font-weight:bold;"
+        )
         left.addWidget(self._result_label)
 
         # Export
@@ -146,7 +157,9 @@ class BoothTab(QWidget):
 
         status = "✅ Correct" if self._result.is_correct else "❌ Mismatch"
         self._result_label.setText(
-            f"Product: {self._result.final_product} (expected {self._result.expected_product}) {status}\n"
+            f"Product: {self._result.final_product} (expected {
+                self._result.expected_product
+            }) {status}\n"
             f"Binary: {self._result.product_bits}"
         )
 
@@ -161,8 +174,8 @@ class BoothTab(QWidget):
         for r, st in enumerate(res.cycles):
             self._step_table.setItem(r, 0, QTableWidgetItem(str(st.cycle)))
             self._step_table.setItem(r, 1, QTableWidgetItem(st.action))
-            a_str = ''.join(map(str, st.a_bits))
-            q_str = ''.join(map(str, st.q_bits))
+            a_str = "".join(map(str, st.a_bits))
+            q_str = "".join(map(str, st.q_bits))
             self._step_table.setItem(r, 2, QTableWidgetItem(a_str))
             self._step_table.setItem(r, 3, QTableWidgetItem(q_str))
             self._step_table.setItem(r, 4, QTableWidgetItem(str(st.q_minus_1)))
@@ -205,6 +218,7 @@ class BoothTab(QWidget):
             return
         from logicraft.theme import get_palette
         import matplotlib.patches as mpatches
+
         p = get_palette(self._dark)
         st = self._result.cycles[self._step]
         bw = self._result.bit_width
@@ -218,70 +232,176 @@ class BoothTab(QWidget):
         cell = 0.8
         y_a = 2.0
         y_q = 0.8
-        y_q1 = 0.8
 
         # Action label
-        action_colors = {"ADD M": p.tertiary, "SUB M": "#ba1a1a", "NOP": p.outline, "INIT": p.secondary}
+        action_colors = {
+            "ADD M": p.tertiary,
+            "SUB M": "#ba1a1a",
+            "NOP": p.outline,
+            "INIT": p.secondary,
+        }
         ac = action_colors.get(st.action, p.outline)
-        ax_reg.text((bw * cell) / 2, y_a + cell + 0.6, st.action,
-                    ha='center', fontsize=16, fontweight='bold', color=ac)
-        ax_reg.text((bw * cell) / 2, y_a + cell + 0.25, st.action_reason,
-                    ha='center', fontsize=10, color=p.on_surface_variant)
+        ax_reg.text(
+            (bw * cell) / 2,
+            y_a + cell + 0.6,
+            st.action,
+            ha="center",
+            fontsize=16,
+            fontweight="bold",
+            color=ac,
+        )
+        ax_reg.text(
+            (bw * cell) / 2,
+            y_a + cell + 0.25,
+            st.action_reason,
+            ha="center",
+            fontsize=10,
+            color=p.on_surface_variant,
+        )
 
         # A register
-        ax_reg.text(-0.5, y_a + cell / 2, "A", ha='right', va='center',
-                    fontsize=13, fontweight='bold', color=p.primary)
+        ax_reg.text(
+            -0.5,
+            y_a + cell / 2,
+            "A",
+            ha="right",
+            va="center",
+            fontsize=13,
+            fontweight="bold",
+            color=p.primary,
+        )
         for i, bit in enumerate(st.a_bits):
             x = i * cell
-            ax_reg.add_patch(mpatches.FancyBboxPatch(
-                (x, y_a), cell, cell, boxstyle="round,pad=0.03",
-                facecolor=p.primary if bit else p.surface_container_high,
-                edgecolor=p.outline_variant, linewidth=1
-            ))
+            ax_reg.add_patch(
+                mpatches.FancyBboxPatch(
+                    (x, y_a),
+                    cell,
+                    cell,
+                    boxstyle="round,pad=0.03",
+                    facecolor=p.primary if bit else p.surface_container_high,
+                    edgecolor=p.outline_variant,
+                    linewidth=1,
+                )
+            )
             tc = p.on_primary if bit else p.on_surface
-            ax_reg.text(x + cell/2, y_a + cell/2, str(bit), ha='center', va='center',
-                        fontsize=14, fontweight='bold', color=tc, fontfamily='monospace')
+            ax_reg.text(
+                x + cell / 2,
+                y_a + cell / 2,
+                str(bit),
+                ha="center",
+                va="center",
+                fontsize=14,
+                fontweight="bold",
+                color=tc,
+                fontfamily="monospace",
+            )
 
         # Q register
-        ax_reg.text(-0.5, y_q + cell / 2, "Q", ha='right', va='center',
-                    fontsize=13, fontweight='bold', color=p.tertiary)
+        ax_reg.text(
+            -0.5,
+            y_q + cell / 2,
+            "Q",
+            ha="right",
+            va="center",
+            fontsize=13,
+            fontweight="bold",
+            color=p.tertiary,
+        )
         for i, bit in enumerate(st.q_bits):
             x = i * cell
-            ax_reg.add_patch(mpatches.FancyBboxPatch(
-                (x, y_q), cell, cell, boxstyle="round,pad=0.03",
-                facecolor=p.tertiary if bit else p.surface_container_high,
-                edgecolor=p.outline_variant, linewidth=1
-            ))
+            ax_reg.add_patch(
+                mpatches.FancyBboxPatch(
+                    (x, y_q),
+                    cell,
+                    cell,
+                    boxstyle="round,pad=0.03",
+                    facecolor=p.tertiary if bit else p.surface_container_high,
+                    edgecolor=p.outline_variant,
+                    linewidth=1,
+                )
+            )
             tc = p.on_tertiary if bit else p.on_surface
-            ax_reg.text(x + cell/2, y_q + cell/2, str(bit), ha='center', va='center',
-                        fontsize=14, fontweight='bold', color=tc, fontfamily='monospace')
+            ax_reg.text(
+                x + cell / 2,
+                y_q + cell / 2,
+                str(bit),
+                ha="center",
+                va="center",
+                fontsize=14,
+                fontweight="bold",
+                color=tc,
+                fontfamily="monospace",
+            )
 
         # Q-1
         q1_x = bw * cell + 0.4
-        ax_reg.add_patch(mpatches.FancyBboxPatch(
-            (q1_x, y_q), cell, cell, boxstyle="round,pad=0.03",
-            facecolor=p.secondary if st.q_minus_1 else p.surface_container_high,
-            edgecolor=p.outline_variant, linewidth=1
-        ))
+        ax_reg.add_patch(
+            mpatches.FancyBboxPatch(
+                (q1_x, y_q),
+                cell,
+                cell,
+                boxstyle="round,pad=0.03",
+                facecolor=p.secondary if st.q_minus_1 else p.surface_container_high,
+                edgecolor=p.outline_variant,
+                linewidth=1,
+            )
+        )
         tc = p.on_secondary if st.q_minus_1 else p.on_surface
-        ax_reg.text(q1_x + cell/2, y_q + cell/2, str(st.q_minus_1), ha='center', va='center',
-                    fontsize=14, fontweight='bold', color=tc, fontfamily='monospace')
-        ax_reg.text(q1_x + cell/2, y_q - 0.2, "Q₋₁", ha='center', fontsize=9, color=p.secondary)
+        ax_reg.text(
+            q1_x + cell / 2,
+            y_q + cell / 2,
+            str(st.q_minus_1),
+            ha="center",
+            va="center",
+            fontsize=14,
+            fontweight="bold",
+            color=tc,
+            fontfamily="monospace",
+        )
+        ax_reg.text(
+            q1_x + cell / 2,
+            y_q - 0.2,
+            "Q₋₁",
+            ha="center",
+            fontsize=9,
+            color=p.secondary,
+        )
 
         ax_reg.set_xlim(-1, (bw + 2) * cell)
         ax_reg.set_ylim(0, y_a + cell + 1.0)
-        ax_reg.set_aspect('equal')
-        ax_reg.axis('off')
-        ax_reg.set_title(f"Booth's Algorithm — Cycle {st.cycle}", fontsize=13,
-                         fontweight='bold', color=p.on_surface, pad=8)
+        ax_reg.set_aspect("equal")
+        ax_reg.axis("off")
+        ax_reg.set_title(
+            f"Booth's Algorithm — Cycle {st.cycle}",
+            fontsize=13,
+            fontweight="bold",
+            color=p.on_surface,
+            pad=8,
+        )
 
         # History chart
-        steps = self._result.cycles[:self._step + 1]
+        steps = self._result.cycles[: self._step + 1]
         xs = [s.cycle for s in steps]
         a_vals = [s.a_signed for s in steps]
         q_vals = [s.q_signed for s in steps]
-        ax_hist.plot(xs, a_vals, 'o-', color=p.primary, label="A (signed)", linewidth=2, markersize=5)
-        ax_hist.plot(xs, q_vals, 's-', color=p.tertiary, label="Q (signed)", linewidth=2, markersize=5)
+        ax_hist.plot(
+            xs,
+            a_vals,
+            "o-",
+            color=p.primary,
+            label="A (signed)",
+            linewidth=2,
+            markersize=5,
+        )
+        ax_hist.plot(
+            xs,
+            q_vals,
+            "s-",
+            color=p.tertiary,
+            label="Q (signed)",
+            linewidth=2,
+            markersize=5,
+        )
         ax_hist.set_xlabel("Cycle", fontsize=10, color=p.on_surface_variant)
         ax_hist.set_ylabel("Signed Value", fontsize=10, color=p.on_surface_variant)
         ax_hist.legend(fontsize=9)
@@ -298,12 +418,26 @@ class BoothTab(QWidget):
         if not self._result:
             return
         import csv
-        path, _ = QFileDialog.getSaveFileName(self, "Export Log", "booth_log.csv", "CSV (*.csv)")
+
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Export Log", "booth_log.csv", "CSV (*.csv)"
+        )
         if not path:
             return
-        with open(path, 'w', newline='') as f:
+        with open(path, "w", newline="") as f:
             w = csv.writer(f)
-            w.writerow(["Cycle", "Action", "A_bits", "Q_bits", "Q-1", "A_signed", "Q_signed"])
+            w.writerow(
+                ["Cycle", "Action", "A_bits", "Q_bits", "Q-1", "A_signed", "Q_signed"]
+            )
             for st in self._result.cycles:
-                w.writerow([st.cycle, st.action, ''.join(map(str, st.a_bits)),
-                            ''.join(map(str, st.q_bits)), st.q_minus_1, st.a_signed, st.q_signed])
+                w.writerow(
+                    [
+                        st.cycle,
+                        st.action,
+                        "".join(map(str, st.a_bits)),
+                        "".join(map(str, st.q_bits)),
+                        st.q_minus_1,
+                        st.a_signed,
+                        st.q_signed,
+                    ]
+                )

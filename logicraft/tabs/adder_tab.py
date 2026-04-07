@@ -4,8 +4,15 @@ Tab 5 — Adder Types UI.
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox,
-    QLabel, QPushButton, QLineEdit, QScrollArea,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QSplitter,
+    QGroupBox,
+    QLabel,
+    QPushButton,
+    QLineEdit,
+    QScrollArea,
 )
 from logicraft.canvas import MplCanvas
 
@@ -110,13 +117,16 @@ class AdderTab(QWidget):
 
         for i, res in enumerate(results):
             self._stats_labels[i].setText(
-                f"{res.name}: Result={res.result} | Gates={res.gate_count} | Delay={res.critical_path_delay}"
+                f"{res.name}: Result={res.result} | Gates={res.gate_count} | Delay={
+                    res.critical_path_delay
+                }"
             )
 
         self._draw_bars(results)
 
     def _draw_bars(self, results):
         from logicraft.theme import get_palette
+
         p = get_palette(self._dark)
         self.canvas.fig.clear()
         axes = self.canvas.fig.subplots(1, 3, sharey=True)
@@ -126,41 +136,74 @@ class AdderTab(QWidget):
             bits = list(range(res.bit_width))
             delays = list(reversed(res.per_bit_delay))
             ax.bar(bits, delays, color=colors[idx], alpha=0.85, width=0.7)
-            ax.axhline(res.critical_path_delay, color=p.error, linestyle='--', linewidth=1.5, label="Critical Path")
-            ax.set_title(res.name, fontsize=11, fontweight='bold', color=p.on_surface)
+            ax.axhline(
+                res.critical_path_delay,
+                color=p.error,
+                linestyle="--",
+                linewidth=1.5,
+                label="Critical Path",
+            )
+            ax.set_title(res.name, fontsize=11, fontweight="bold", color=p.on_surface)
             ax.set_xlabel("Bit Position", fontsize=9, color=p.on_surface_variant)
             if idx == 0:
-                ax.set_ylabel("Delay (gate delays)", fontsize=9, color=p.on_surface_variant)
+                ax.set_ylabel(
+                    "Delay (gate delays)", fontsize=9, color=p.on_surface_variant
+                )
             ax.set_facecolor(self.canvas.fig.get_facecolor())
             ax.tick_params(colors=p.on_surface_variant, labelsize=8)
             for spine in ax.spines.values():
                 spine.set_color(p.outline_variant)
-            ax.legend(fontsize=8, loc='upper left')
+            ax.legend(fontsize=8, loc="upper left")
 
-        self.canvas.fig.suptitle(f"{self._bw}-Bit Adder Comparison", fontsize=13,
-                                  fontweight='bold', color=p.on_surface)
-        self.canvas.fig.subplots_adjust(wspace=0.15, left=0.08, right=0.96, top=0.88, bottom=0.12)
+        self.canvas.fig.suptitle(
+            f"{self._bw}-Bit Adder Comparison",
+            fontsize=13,
+            fontweight="bold",
+            color=p.on_surface,
+        )
+        self.canvas.fig.subplots_adjust(
+            wspace=0.15, left=0.08, right=0.96, top=0.88, bottom=0.12
+        )
         self.canvas.draw()
 
     def _show_scaling(self):
         from logicraft.theme import get_palette
+
         p = get_palette(self._dark)
         data = scaling_data([4, 8, 12, 16])
         self.canvas.fig.clear()
         ax = self.canvas.fig.add_subplot(111)
 
-        colors = {"Ripple Carry": p.primary, "Carry Lookahead": p.tertiary, "Carry Select": p.secondary}
+        colors = {
+            "Ripple Carry": p.primary,
+            "Carry Lookahead": p.tertiary,
+            "Carry Select": p.secondary,
+        }
         markers = {"Ripple Carry": "o", "Carry Lookahead": "s", "Carry Select": "^"}
 
         for name, pts in data.items():
             ws = [pt[0] for pt in pts]
             ds = [pt[1] for pt in pts]
-            ax.plot(ws, ds, marker=markers[name], color=colors[name], linewidth=2,
-                    markersize=8, label=name)
+            ax.plot(
+                ws,
+                ds,
+                marker=markers[name],
+                color=colors[name],
+                linewidth=2,
+                markersize=8,
+                label=name,
+            )
 
         ax.set_xlabel("Bit Width", fontsize=11, color=p.on_surface)
-        ax.set_ylabel("Critical Path Delay (gate delays)", fontsize=11, color=p.on_surface)
-        ax.set_title("Adder Scaling: Delay vs Bit Width", fontsize=13, fontweight='bold', color=p.on_surface)
+        ax.set_ylabel(
+            "Critical Path Delay (gate delays)", fontsize=11, color=p.on_surface
+        )
+        ax.set_title(
+            "Adder Scaling: Delay vs Bit Width",
+            fontsize=13,
+            fontweight="bold",
+            color=p.on_surface,
+        )
         ax.legend(fontsize=10)
         ax.grid(True, alpha=0.3)
         ax.set_facecolor(self.canvas.fig.get_facecolor())

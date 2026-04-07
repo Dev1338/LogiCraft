@@ -5,14 +5,30 @@ Tab 7 — FSM Designer UI.
 import math
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QSplitter, QGroupBox,
-    QLabel, QPushButton, QLineEdit, QComboBox, QTableWidget,
-    QTableWidgetItem, QScrollArea, QCheckBox, QFormLayout,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QSplitter,
+    QGroupBox,
+    QLabel,
+    QPushButton,
+    QLineEdit,
+    QComboBox,
+    QTableWidget,
+    QTableWidgetItem,
+    QScrollArea,
+    QCheckBox,
+    QFormLayout,
 )
 from logicraft.canvas import MplCanvas
 from logicraft.widgets import TonalSeparator
 from logicraft.engines.fsm_engine import (
-    FSMDef, State, Transition, simulate, PRESETS, minimize_states, SimResult,
+    FSMDef,
+    State,
+    Transition,
+    simulate,
+    PRESETS,
+    minimize_states,
 )
 
 
@@ -122,7 +138,9 @@ class FSMTab(QWidget):
         sim_row.addWidget(sim_btn)
         sim_lay.addLayout(sim_row)
         self._verdict_label = QLabel("")
-        self._verdict_label.setStyleSheet("font-size:14px; font-weight:bold; padding:4px;")
+        self._verdict_label.setStyleSheet(
+            "font-size:14px; font-weight:bold; padding:4px;"
+        )
         sim_lay.addWidget(self._verdict_label)
         left.addWidget(sim_group)
 
@@ -159,9 +177,9 @@ class FSMTab(QWidget):
         splitter.setSizes([400, 700])
 
         # Canvas mouse events for dragging
-        self.canvas.mpl_connect('button_press_event', self._on_press)
-        self.canvas.mpl_connect('motion_notify_event', self._on_motion)
-        self.canvas.mpl_connect('button_release_event', self._on_release)
+        self.canvas.mpl_connect("button_press_event", self._on_press)
+        self.canvas.mpl_connect("motion_notify_event", self._on_motion)
+        self.canvas.mpl_connect("button_release_event", self._on_release)
 
     def apply_theme(self, dark):
         self._dark = dark
@@ -186,9 +204,14 @@ class FSMTab(QWidget):
         output = self._st_output.text().strip()
         n = len(self._fsm.states)
         angle = 2 * math.pi * n / max(n + 1, 3)
-        s = State(name, output, self._st_start.isChecked(),
-                  self._st_accept.isChecked(),
-                  x=2 * math.cos(angle), y=2 * math.sin(angle))
+        s = State(
+            name,
+            output,
+            self._st_start.isChecked(),
+            self._st_accept.isChecked(),
+            x=2 * math.cos(angle),
+            y=2 * math.sin(angle),
+        )
         if not any(inp.name == name for inp in self._fsm.states):
             self._fsm.states.append(s)
         self._st_name.clear()
@@ -227,11 +250,19 @@ class FSMTab(QWidget):
 
         # Verdict
         if result.accepted:
-            self._verdict_label.setText(f"✅ ACCEPTED — Final state: {result.final_state}")
-            self._verdict_label.setStyleSheet("font-size:14px; font-weight:bold; color:#25752b; padding:4px;")
+            self._verdict_label.setText(
+                f"✅ ACCEPTED — Final state: {result.final_state}"
+            )
+            self._verdict_label.setStyleSheet(
+                "font-size:14px; font-weight:bold; color:#25752b; padding:4px;"
+            )
         else:
-            self._verdict_label.setText(f"❌ REJECTED — Final state: {result.final_state}")
-            self._verdict_label.setStyleSheet("font-size:14px; font-weight:bold; color:#ba1a1a; padding:4px;")
+            self._verdict_label.setText(
+                f"❌ REJECTED — Final state: {result.final_state}"
+            )
+            self._verdict_label.setStyleSheet(
+                "font-size:14px; font-weight:bold; color:#ba1a1a; padding:4px;"
+            )
 
         # Trace table
         self._trace_table.setRowCount(len(result.trace))
@@ -239,7 +270,9 @@ class FSMTab(QWidget):
         self._trace_table.setColumnCount(len(cols))
         self._trace_table.setHorizontalHeaderLabels(cols)
         for r, tr in enumerate(result.trace):
-            for c, val in enumerate([tr.step, tr.current_state, tr.input_symbol, tr.next_state, tr.output]):
+            for c, val in enumerate(
+                [tr.step, tr.current_state, tr.input_symbol, tr.next_state, tr.output]
+            ):
                 item = QTableWidgetItem(str(val))
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -256,15 +289,23 @@ class FSMTab(QWidget):
     def _draw_fsm(self):
         from logicraft.theme import get_palette
         import matplotlib.patches as mpatches
-        import numpy as np
+
         p = get_palette(self._dark)
         ax = self.canvas.axes
         ax.clear()
 
         states = self._fsm.states
         if not states:
-            ax.text(0.5, 0.5, "Add states to begin", ha='center', va='center',
-                    fontsize=14, color=p.outline, transform=ax.transAxes)
+            ax.text(
+                0.5,
+                0.5,
+                "Add states to begin",
+                ha="center",
+                va="center",
+                fontsize=14,
+                color=p.outline,
+                transform=ax.transAxes,
+            )
             self.canvas.draw()
             return
 
@@ -293,33 +334,55 @@ class FSMTab(QWidget):
 
             # Glow for traced
             if s.name in traced:
-                glow = mpatches.Circle((s.x, s.y), radius + 0.15,
-                                        facecolor='#FFD60033', edgecolor='#FFD600', linewidth=2)
+                glow = mpatches.Circle(
+                    (s.x, s.y),
+                    radius + 0.15,
+                    facecolor="#FFD60033",
+                    edgecolor="#FFD600",
+                    linewidth=2,
+                )
                 ax.add_patch(glow)
 
-            circle = mpatches.Circle((s.x, s.y), radius,
-                                      facecolor=fc, edgecolor=ec, linewidth=2)
+            circle = mpatches.Circle(
+                (s.x, s.y), radius, facecolor=fc, edgecolor=ec, linewidth=2
+            )
             ax.add_patch(circle)
 
             # Double ring for accept
             if s.is_accept:
-                inner = mpatches.Circle((s.x, s.y), radius - 0.08,
-                                         facecolor='none', edgecolor=ec, linewidth=1.5)
+                inner = mpatches.Circle(
+                    (s.x, s.y),
+                    radius - 0.08,
+                    facecolor="none",
+                    edgecolor=ec,
+                    linewidth=1.5,
+                )
                 ax.add_patch(inner)
 
             # Label
             label = s.name
             if self._fsm.mode == "Moore" and s.output:
                 label += f"\n/{s.output}"
-            ax.text(s.x, s.y, label, ha='center', va='center',
-                    fontsize=10, fontweight='bold', color=p.on_surface)
+            ax.text(
+                s.x,
+                s.y,
+                label,
+                ha="center",
+                va="center",
+                fontsize=10,
+                fontweight="bold",
+                color=p.on_surface,
+            )
 
         # Start arrow
         start = self._fsm.start_state()
         if start:
-            ax.annotate("", xy=(start.x - radius, start.y),
-                        xytext=(start.x - radius - 0.8, start.y),
-                        arrowprops=dict(arrowstyle='->', color=p.primary, lw=2))
+            ax.annotate(
+                "",
+                xy=(start.x - radius, start.y),
+                xytext=(start.x - radius - 0.8, start.y),
+                arrowprops=dict(arrowstyle="->", color=p.primary, lw=2),
+            )
 
         # Draw transitions
         drawn_pairs = {}
@@ -339,20 +402,42 @@ class FSMTab(QWidget):
 
             if t.src == t.dst:
                 # Self-loop
-                angle = math.atan2(src_s.y, src_s.x) if (src_s.x or src_s.y) else math.pi/2
+                angle = (
+                    math.atan2(src_s.y, src_s.x)
+                    if (src_s.x or src_s.y)
+                    else math.pi / 2
+                )
                 loop_x = src_s.x + 0.7 * math.cos(angle)
                 loop_y = src_s.y + 0.7 * math.sin(angle)
                 arc = mpatches.FancyArrowPatch(
-                    (src_s.x + radius * math.cos(angle + 0.3), src_s.y + radius * math.sin(angle + 0.3)),
-                    (src_s.x + radius * math.cos(angle - 0.3), src_s.y + radius * math.sin(angle - 0.3)),
-                    connectionstyle=f"arc3,rad=1.5",
-                    arrowstyle='->', color=p.secondary, linewidth=1.5,
+                    (
+                        src_s.x + radius * math.cos(angle + 0.3),
+                        src_s.y + radius * math.sin(angle + 0.3),
+                    ),
+                    (
+                        src_s.x + radius * math.cos(angle - 0.3),
+                        src_s.y + radius * math.sin(angle - 0.3),
+                    ),
+                    connectionstyle="arc3,rad=1.5",
+                    arrowstyle="->",
+                    color=p.secondary,
+                    linewidth=1.5,
                     mutation_scale=15,
                 )
                 ax.add_patch(arc)
-                ax.text(loop_x, loop_y, label, ha='center', va='center',
-                        fontsize=9, color=p.secondary, fontweight='bold',
-                        bbox=dict(facecolor=p.surface_container_lowest, edgecolor='none', pad=1))
+                ax.text(
+                    loop_x,
+                    loop_y,
+                    label,
+                    ha="center",
+                    va="center",
+                    fontsize=9,
+                    color=p.secondary,
+                    fontweight="bold",
+                    bbox=dict(
+                        facecolor=p.surface_container_lowest, edgecolor="none", pad=1
+                    ),
+                )
             else:
                 # Curved arrow
                 curve = 0.2 if pair_count == 0 else -0.3
@@ -367,18 +452,31 @@ class FSMTab(QWidget):
                 ey = dst_s.y - uy * radius
 
                 arrow = mpatches.FancyArrowPatch(
-                    (sx, sy), (ex, ey),
+                    (sx, sy),
+                    (ex, ey),
                     connectionstyle=f"arc3,rad={curve}",
-                    arrowstyle='->', color=p.on_surface_variant, linewidth=1.5,
+                    arrowstyle="->",
+                    color=p.on_surface_variant,
+                    linewidth=1.5,
                     mutation_scale=15,
                 )
                 ax.add_patch(arrow)
 
                 mx = (sx + ex) / 2 + curve * (-(ey - sy))
                 my = (sy + ey) / 2 + curve * (ex - sx)
-                ax.text(mx, my, label, ha='center', va='center',
-                        fontsize=9, color=p.on_surface, fontweight='bold',
-                        bbox=dict(facecolor=p.surface_container_lowest, edgecolor='none', pad=1))
+                ax.text(
+                    mx,
+                    my,
+                    label,
+                    ha="center",
+                    va="center",
+                    fontsize=9,
+                    color=p.on_surface,
+                    fontweight="bold",
+                    bbox=dict(
+                        facecolor=p.surface_container_lowest, edgecolor="none", pad=1
+                    ),
+                )
 
         # Auto-scale
         if states:
@@ -387,9 +485,15 @@ class FSMTab(QWidget):
             margin = 2
             ax.set_xlim(min(xs) - margin, max(xs) + margin)
             ax.set_ylim(min(ys) - margin, max(ys) + margin)
-        ax.set_aspect('equal')
-        ax.axis('off')
-        ax.set_title(f"{self._fsm.mode} FSM", fontsize=13, fontweight='bold', color=p.on_surface, pad=10)
+        ax.set_aspect("equal")
+        ax.axis("off")
+        ax.set_title(
+            f"{self._fsm.mode} FSM",
+            fontsize=13,
+            fontweight="bold",
+            color=p.on_surface,
+            pad=10,
+        )
         self.canvas.fig.tight_layout()
         self.canvas.draw()
 
