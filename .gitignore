@@ -30,3 +30,7 @@ htmlcov/
 
 # Errors
 errors.txt
+
+# Linting / Formatting
+.ruff_cache/
+.mypy_cache/

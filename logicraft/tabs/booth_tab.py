@@ -184,7 +184,11 @@ class BoothTab(QWidget):
                 if item:
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        # Improve column sizing
+        header = self._step_table.horizontalHeader()
+        header.setMinimumSectionSize(50)
         self._step_table.resizeColumnsToContents()
+        header.setStretchLastSection(True)
 
     def _update_nav(self):
         if not self._result:
