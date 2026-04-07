@@ -9,8 +9,9 @@ from dataclasses import dataclass
 @dataclass
 class FlipFlopState:
     """State at one clock cycle."""
+
     cycle: int
-    inputs: dict[str, int]    # e.g. {"D": 1} or {"J": 0, "K": 1}
+    inputs: dict[str, int]  # e.g. {"D": 1} or {"J": 0, "K": 1}
     q_before: int
     q_after: int
     q_bar: int
@@ -26,6 +27,7 @@ class TimingResult:
 
 
 # ── State tables ─────────────────────────────────────────────────────────────
+
 
 def get_state_table(ff_type: str) -> list[dict]:
     """Return the characteristic table for the given flip-flop type."""
@@ -62,8 +64,10 @@ def get_state_table(ff_type: str) -> list[dict]:
 
 # ── Simulation ───────────────────────────────────────────────────────────────
 
-def simulate(ff_type: str, input_sequence: list[dict[str, int]],
-             initial_q: int = 0) -> TimingResult:
+
+def simulate(
+    ff_type: str, input_sequence: list[dict[str, int]], initial_q: int = 0
+) -> TimingResult:
     """
     Simulate a flip-flop through a sequence of input dictionaries.
 
@@ -121,15 +125,17 @@ def simulate(ff_type: str, input_sequence: list[dict[str, int]],
         else:
             q_after = q
 
-        states.append(FlipFlopState(
-            cycle=cycle_idx,
-            inputs=dict(inputs),
-            q_before=q_before,
-            q_after=q_after,
-            q_bar=1 - q_after,
-            is_invalid=is_invalid,
-            invalid_reason=invalid_reason,
-        ))
+        states.append(
+            FlipFlopState(
+                cycle=cycle_idx,
+                inputs=dict(inputs),
+                q_before=q_before,
+                q_after=q_after,
+                q_bar=1 - q_after,
+                is_invalid=is_invalid,
+                invalid_reason=invalid_reason,
+            )
+        )
         q = q_after
 
     return TimingResult(ff_type=ff_type, states=states, input_names=input_names)

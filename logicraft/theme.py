@@ -6,7 +6,8 @@ project.  Provides light/dark themes for PyQt6 and matching matplotlib rcParams.
 from dataclasses import dataclass
 
 
-# ── Colour palette ────────────────────────────────────────────────────────────
+# ── Colour palette ──────────────────────────────────────────────────────
+
 
 @dataclass(frozen=True)
 class Palette:
@@ -105,6 +106,7 @@ DARK = Palette(
 
 
 # ── QSS stylesheet generator ─────────────────────────────────────────────────
+
 
 def _build_stylesheet(p: Palette) -> str:
     return f"""
@@ -276,6 +278,21 @@ QPushButton[class="flag-pill"][active="true"] {{
     color: {p.on_tertiary};
 }}
 QPushButton[class="flag-pill"][active="false"] {{
+    background-color: {p.surface_container_high};
+    color: {p.outline};
+}}
+QPushButton[class="flag-pill-error"] {{
+    border-radius: 10px;
+    padding: 3px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    min-height: 20px;
+}}
+QPushButton[class="flag-pill-error"][active="true"] {{
+    background-color: {p.error};
+    color: {p.on_error};
+}}
+QPushButton[class="flag-pill-error"][active="false"] {{
     background-color: {p.surface_container_high};
     color: {p.outline};
 }}

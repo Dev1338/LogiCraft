@@ -13,12 +13,13 @@ class AdderResult:
     result: int
     carry_out: bool
     gate_count: int
-    critical_path_delay: int    # in gate delays
-    per_bit_delay: list[int]    # delay to compute each bit (index 0 = MSB)
+    critical_path_delay: int  # in gate delays
+    per_bit_delay: list[int]  # delay to compute each bit (index 0 = MSB)
     bit_width: int
 
 
 # ── Ripple Carry Adder ───────────────────────────────────────────────────────
+
 
 def ripple_carry(a: int, b: int, bit_width: int) -> AdderResult:
     """Model a ripple carry adder."""
@@ -50,6 +51,7 @@ def ripple_carry(a: int, b: int, bit_width: int) -> AdderResult:
 
 # ── Carry Lookahead Adder ────────────────────────────────────────────────────
 
+
 def carry_lookahead(a: int, b: int, bit_width: int) -> AdderResult:
     """Model a carry lookahead adder with 4-bit CLA blocks."""
     mask = (1 << bit_width) - 1
@@ -71,7 +73,10 @@ def carry_lookahead(a: int, b: int, bit_width: int) -> AdderResult:
         bit_pos = bit_width - 1 - i
         block_idx = bit_pos // block_size
         intra_block = 3  # constant within a block
-        inter_block = 2 * min(levels, max(1, math.ceil(math.log(max(block_idx + 1, 1) + 0.001) / math.log(4))))
+        inter_block = 2 * min(
+            levels,
+            max(1, math.ceil(math.log(max(block_idx + 1, 1) + 0.001) / math.log(4))),
+        )
         per_bit.append(intra_block + inter_block)
 
     critical = base_delay + 2 * levels
@@ -89,6 +94,7 @@ def carry_lookahead(a: int, b: int, bit_width: int) -> AdderResult:
 
 
 # ── Carry Select Adder ──────────────────────────────────────────────────────
+
 
 def carry_select(a: int, b: int, bit_width: int) -> AdderResult:
     """Model a carry select adder with 4-bit blocks."""
@@ -115,7 +121,8 @@ def carry_select(a: int, b: int, bit_width: int) -> AdderResult:
             per_bit.append(intra)
         else:
             # Parallel block + MUX select chain
-            intra = 2 * min(block_size, bit_width)  # ripple within block (parallel)
+            # ripple within block (parallel)
+            intra = 2 * min(block_size, bit_width)
             mux_chain = n_blocks - 1 - block_idx  # MUX select propagation
             per_bit.append(intra + mux_chain)
 
@@ -134,6 +141,7 @@ def carry_select(a: int, b: int, bit_width: int) -> AdderResult:
 
 
 # ── Comparison helper ────────────────────────────────────────────────────────
+
 
 def compare_all(a: int, b: int, bit_width: int) -> list[AdderResult]:
     """Run all three adder architectures and return results."""
@@ -155,6 +163,8 @@ def scaling_data(widths: list[int] | None = None) -> dict[str, list[tuple[int, i
     }
     for w in widths:
         data["Ripple Carry"].append((w, ripple_carry(0, 0, w).critical_path_delay))
-        data["Carry Lookahead"].append((w, carry_lookahead(0, 0, w).critical_path_delay))
+        data["Carry Lookahead"].append(
+            (w, carry_lookahead(0, 0, w).critical_path_delay)
+        )
         data["Carry Select"].append((w, carry_select(0, 0, w).critical_path_delay))
     return data

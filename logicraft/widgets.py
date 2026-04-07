@@ -5,20 +5,32 @@ Reusable custom widgets used across multiple tabs.
 from PyQt6.QtCore import Qt, pyqtSignal, QMimeData
 from PyQt6.QtGui import QDrag, QIntValidator
 from PyQt6.QtWidgets import (
-    QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QLabel,
-    QLineEdit, QFrame, QSizePolicy,
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QPushButton,
+    QLabel,
+    QLineEdit,
+    QFrame,
+    QSizePolicy,
 )
 
 
-# ── Bit Toggle Row ────────────────────────────────────────────────────────────
+# ── Bit Toggle Row ──────────────────────────────────────────────────────
+
 
 class BitToggleRow(QWidget):
     """Row of clickable bit-toggle buttons with synced decimal/hex fields."""
 
     value_changed = pyqtSignal(int)  # emits the unsigned int value
 
-    def __init__(self, bit_width: int = 8, label: str = "Value",
-                 parent: QWidget | None = None, read_only: bool = False):
+    def __init__(
+        self,
+        bit_width: int = 8,
+        label: str = "Value",
+        parent: QWidget | None = None,
+        read_only: bool = False,
+    ):
         super().__init__(parent)
         self._bit_width = bit_width
         self._read_only = read_only
@@ -112,7 +124,9 @@ class BitToggleRow(QWidget):
 
         for i in range(self._bit_width):
             btn = QPushButton("0")
-            btn.setProperty("class", "bit-toggle" if not self._read_only else "bit-toggle-result")
+            btn.setProperty(
+                "class", "bit-toggle" if not self._read_only else "bit-toggle-result"
+            )
             btn.setProperty("active", "false")
             if not self._read_only:
                 btn.clicked.connect(lambda _, idx=i: self._toggle_bit(idx))
@@ -187,6 +201,7 @@ class BitToggleRow(QWidget):
 
 # ── Draggable Value Label ────────────────────────────────────────────────────
 
+
 class DraggableValueLabel(QLabel):
     """A label whose text (integer value) can be dragged onto BitToggleRows."""
 
@@ -211,14 +226,15 @@ class DraggableValueLabel(QLabel):
             self.setCursor(Qt.CursorShape.OpenHandCursor)
 
 
-# ── Flag Pill ─────────────────────────────────────────────────────────────────
+# ── Flag Pill ───────────────────────────────────────────────────────────
+
 
 class FlagPill(QPushButton):
     """Coloured indicator pill for status flags (Zero, Carry, etc.)."""
 
-    def __init__(self, label: str, parent: QWidget | None = None):
+    def __init__(self, label: str, parent: QWidget | None = None, is_error: bool = False):
         super().__init__(label, parent)
-        self.setProperty("class", "flag-pill")
+        self.setProperty("class", "flag-pill-error" if is_error else "flag-pill")
         self.setProperty("active", "false")
         self.setCheckable(False)
         self.setEnabled(False)
@@ -231,6 +247,7 @@ class FlagPill(QPushButton):
 
 
 # ── Segment Control ──────────────────────────────────────────────────────────
+
 
 class SegmentControl(QWidget):
     """Horizontal segmented button bar for mode switching."""
@@ -273,7 +290,8 @@ class SegmentControl(QWidget):
         self._select(idx)
 
 
-# ── Separator ─────────────────────────────────────────────────────────────────
+# ── Separator ───────────────────────────────────────────────────────────
+
 
 class TonalSeparator(QFrame):
     """Horizontal separator using tonal shift instead of a line."""

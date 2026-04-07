@@ -8,7 +8,8 @@ from dataclasses import dataclass
 @dataclass
 class ALUResult:
     """Result of an ALU operation."""
-    result: int          # unsigned result (masked to bit_width)
+
+    result: int  # unsigned result (masked to bit_width)
     carry: bool
     overflow: bool
     zero: bool
@@ -18,7 +19,7 @@ class ALUResult:
     a_bits: list[int]
     b_bits: list[int]
     result_bits: list[int]
-    carry_bits: list[int]   # carry into each stage (len = bit_width + 1)
+    carry_bits: list[int]  # carry into each stage (len = bit_width + 1)
     gate_labels: list[str]  # label per stage
 
     @property
@@ -68,7 +69,8 @@ def compute(a: int, b: int, op: str, bit_width: int) -> ALUResult:
             ab = a_bits[i]
             bb = b_bits[i]
             cin = carry_bits[i + 1] if i < bit_width - 1 else 0
-            # for the rightmost bit, carry-in = 0; for others, use carry from right
+            # for the rightmost bit, carry-in = 0; for others, use carry from
+            # right
             if i == bit_width - 1:
                 cin = 0
             else:
@@ -83,7 +85,9 @@ def compute(a: int, b: int, op: str, bit_width: int) -> ALUResult:
         for i in range(bit_width):
             result_bits[i] = a_bits[i] ^ b_bits[i] ^ carry_bits[i + 1]
             gate_labels[i] = "FA"
-        raw_result = sum(result_bits[i] << (bit_width - 1 - i) for i in range(bit_width))
+        raw_result = sum(
+            result_bits[i] << (bit_width - 1 - i) for i in range(bit_width)
+        )
         carry = bool(carry_bits[0])
         # overflow: sign of a and b same, but result different
         sa = _to_signed(a, bit_width)
@@ -98,7 +102,9 @@ def compute(a: int, b: int, op: str, bit_width: int) -> ALUResult:
         for i in range(bit_width):
             result_bits[i] = a_bits[i] ^ b_bits_sub[i] ^ carry_bits[i + 1]
             gate_labels[i] = "FA"
-        raw_result = sum(result_bits[i] << (bit_width - 1 - i) for i in range(bit_width))
+        raw_result = sum(
+            result_bits[i] << (bit_width - 1 - i) for i in range(bit_width)
+        )
         carry = not bool(carry_bits[0])  # borrow
         sa = _to_signed(a, bit_width)
         sb = _to_signed(b, bit_width)
@@ -111,7 +117,9 @@ def compute(a: int, b: int, op: str, bit_width: int) -> ALUResult:
         sb = _to_signed(b, bit_width)
         product = sa * sb
         raw_result = _from_signed(product, bit_width)
-        result_bits = [(raw_result >> (bit_width - 1 - i)) & 1 for i in range(bit_width)]
+        result_bits = [
+            (raw_result >> (bit_width - 1 - i)) & 1 for i in range(bit_width)
+        ]
         carry_bits = [0] * (bit_width + 1)
         gate_labels = ["MUL"] * bit_width
         carry = bool(product & ~mask)
@@ -139,12 +147,16 @@ def compute(a: int, b: int, op: str, bit_width: int) -> ALUResult:
                 r = 1 - (ab | bb)
                 gate_labels[i] = "NOR"
             result_bits[i] = r
-        raw_result = sum(result_bits[i] << (bit_width - 1 - i) for i in range(bit_width))
+        raw_result = sum(
+            result_bits[i] << (bit_width - 1 - i) for i in range(bit_width)
+        )
         carry_bits = [0] * (bit_width + 1)
 
     elif op == "NOT":
         raw_result = (~a) & mask
-        result_bits = [(raw_result >> (bit_width - 1 - i)) & 1 for i in range(bit_width)]
+        result_bits = [
+            (raw_result >> (bit_width - 1 - i)) & 1 for i in range(bit_width)
+        ]
         gate_labels = ["NOT"] * bit_width
         carry_bits = [0] * (bit_width + 1)
 
@@ -161,7 +173,9 @@ def compute(a: int, b: int, op: str, bit_width: int) -> ALUResult:
         elif op == "ROR":
             lsb = a & 1
             raw_result = (a >> 1) | (lsb << (bit_width - 1))
-        result_bits = [(raw_result >> (bit_width - 1 - i)) & 1 for i in range(bit_width)]
+        result_bits = [
+            (raw_result >> (bit_width - 1 - i)) & 1 for i in range(bit_width)
+        ]
         gate_labels = [op] * bit_width
         carry_bits = [0] * (bit_width + 1)
 
@@ -189,8 +203,9 @@ def compute(a: int, b: int, op: str, bit_width: int) -> ALUResult:
     )
 
 
-def _full_adder_chain(a_bits: list[int], b_bits: list[int],
-                       carry_in: int, width: int) -> list[int]:
+def _full_adder_chain(
+    a_bits: list[int], b_bits: list[int], carry_in: int, width: int
+) -> list[int]:
     """Compute carry chain from LSB (right) to MSB (left).
 
     Returns list of length (width+1).  Index 0 = carry-out of MSB,

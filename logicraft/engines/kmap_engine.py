@@ -3,15 +3,14 @@ Quine-McCluskey minimisation engine and K-map data generation.
 """
 
 from __future__ import annotations
-from dataclasses import dataclass, field
-from itertools import combinations
+from dataclasses import dataclass
 
 
 @dataclass
 class Implicant:
     minterms: frozenset[int]
-    mask: int          # bits that are "don't-care" in the implicant
-    value: int         # the common bit pattern (with don't-care bits zeroed)
+    mask: int  # bits that are "don't-care" in the implicant
+    value: int  # the common bit pattern (with don't-care bits zeroed)
     n_vars: int
     is_essential: bool = False
 
@@ -38,7 +37,7 @@ class KMapResult:
     prime_implicants: list[Implicant]
     essential_implicants: list[Implicant]
     sop_expression: str
-    kmap_grid: list[list[str]]       # 2D grid of "0", "1", "X"
+    kmap_grid: list[list[str]]  # 2D grid of "0", "1", "X"
     row_labels: list[str]
     col_labels: list[str]
     groups: list[tuple[Implicant, str]]  # (implicant, colour)
@@ -68,6 +67,7 @@ def _grey_labels(n: int) -> list[str]:
 
 # ── Quine-McCluskey ──────────────────────────────────────────────────────────
 
+
 def _count_ones(n: int) -> int:
     return bin(n).count("1")
 
@@ -89,8 +89,9 @@ def _combine(a: Implicant, b: Implicant) -> Implicant | None:
     )
 
 
-def quine_mccluskey(n_vars: int, minterms: list[int],
-                     dont_cares: list[int] | None = None) -> list[Implicant]:
+def quine_mccluskey(
+    n_vars: int, minterms: list[int], dont_cares: list[int] | None = None
+) -> list[Implicant]:
     """Find all prime implicants using Quine-McCluskey."""
     if dont_cares is None:
         dont_cares = []
@@ -137,18 +138,19 @@ def quine_mccluskey(n_vars: int, minterms: list[int],
     # Convert to Implicant objects
     primes = []
     for val, mask, mts in prime_set:
-        primes.append(Implicant(
-            minterms=mts,
-            mask=mask,
-            value=val,
-            n_vars=n_vars,
-        ))
+        primes.append(
+            Implicant(
+                minterms=mts,
+                mask=mask,
+                value=val,
+                n_vars=n_vars,
+            )
+        )
 
     return primes
 
 
-def find_essential(primes: list[Implicant],
-                    minterms: list[int]) -> list[Implicant]:
+def find_essential(primes: list[Implicant], minterms: list[int]) -> list[Implicant]:
     """Identify essential prime implicants using the prime implicant chart."""
     mt_set = set(minterms)
     essential = []
@@ -161,18 +163,20 @@ def find_essential(primes: list[Implicant],
             if p not in essential:
                 p.is_essential = True
                 essential.append(p)
-                covered |= (p.minterms & mt_set)
+                covered |= p.minterms & mt_set
 
     # Greedy cover for remaining
     remaining = mt_set - covered
     remaining_primes = [p for p in primes if p not in essential]
 
     while remaining:
-        best = max(remaining_primes, key=lambda p: len(p.minterms & remaining), default=None)
+        best = max(
+            remaining_primes, key=lambda p: len(p.minterms & remaining), default=None
+        )
         if best is None or not (best.minterms & remaining):
             break
         essential.append(best)
-        covered |= (best.minterms & mt_set)
+        covered |= best.minterms & mt_set
         remaining = mt_set - covered
         remaining_primes.remove(best)
 
@@ -182,9 +186,18 @@ def find_essential(primes: list[Implicant],
 # ── K-Map grid generation ────────────────────────────────────────────────────
 
 GROUP_COLOURS = [
-    "#1565C0", "#25752b", "#ba1a1a", "#9C27B0",
-    "#FF9800", "#00897B", "#5C6BC0", "#F06292",
-    "#8D6E63", "#78909C", "#E91E63", "#4CAF50",
+    "#1565C0",
+    "#25752b",
+    "#ba1a1a",
+    "#9C27B0",
+    "#FF9800",
+    "#00897B",
+    "#5C6BC0",
+    "#F06292",
+    "#8D6E63",
+    "#78909C",
+    "#E91E63",
+    "#4CAF50",
 ]
 
 

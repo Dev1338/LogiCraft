@@ -3,11 +3,17 @@ MainWindow — application shell with toolbar, sidebar navigation, and status ba
 """
 
 from PyQt6.QtCore import pyqtSignal, Qt
-from PyQt6.QtGui import QFont, QFontDatabase
 from PyQt6.QtWidgets import (
-    QMainWindow, QToolBar, QStatusBar,
-    QLabel, QWidget, QHBoxLayout, QVBoxLayout,
-    QStackedWidget, QListWidget, QPushButton
+    QMainWindow,
+    QToolBar,
+    QStatusBar,
+    QLabel,
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QStackedWidget,
+    QListWidget,
+    QPushButton,
 )
 
 from logicraft.theme import LIGHT_STYLESHEET, DARK_STYLESHEET
@@ -55,7 +61,10 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(self._bw_segment)
 
         spacer_stretch = QWidget()
-        spacer_stretch.setSizePolicy(spacer_stretch.sizePolicy().Policy.Expanding, spacer_stretch.sizePolicy().Policy.Preferred)
+        spacer_stretch.setSizePolicy(
+            spacer_stretch.sizePolicy().Policy.Expanding,
+            spacer_stretch.sizePolicy().Policy.Preferred,
+        )
         toolbar.addWidget(spacer_stretch)
 
         self._dark_btn = QPushButton("⚙")
@@ -80,13 +89,16 @@ class MainWindow(QMainWindow):
         side_layout.setContentsMargins(0, 24, 0, 0)
         side_layout.setSpacing(16)
 
-        proj_label = QLabel("PROJECT EXPLORER\n<span style='color:#727783; font-weight:normal; font-size:12px;'>Precision Engineering</span>")
+        proj_label = QLabel(
+            "PROJECT EXPLORER\n<span style='color:#727783; font-weight:normal; font-size:12px;'>Precision Engineering</span>"
+        )
         proj_label.setProperty("class", "project-explorer")
+        proj_label.setTextFormat(Qt.TextFormat.RichText)
         side_layout.addWidget(proj_label)
 
         self._nav_list = QListWidget()
         self._nav_list.setProperty("class", "nav-list")
-        
+
         nav_items = [
             "⚙   ALU Simulator",
             "🔢   Number Systems",
@@ -94,13 +106,13 @@ class MainWindow(QMainWindow):
             "≡   Sequential Logic",
             "➕   Adder Types",
             "✖   Booth's Algorithm",
-            "🔄   FSM Designer"
+            "🔄   FSM Designer",
         ]
         self._nav_list.addItems(nav_items)
         self._nav_list.setCurrentRow(0)
         self._nav_list.currentRowChanged.connect(self._on_nav_changed)
         side_layout.addWidget(self._nav_list)
-        
+
         main_layout.addWidget(sidebar)
 
         # ── Stacked Content ──────────────────────────────────
@@ -127,14 +139,14 @@ class MainWindow(QMainWindow):
         # ── Status Bar ───────────────────────────────────────
         status = QStatusBar()
         self.setStatusBar(status)
-        
+
         self._status_left = QLabel("MODE: SIMULATION ACTIVE   CYCLE: 0.004MS")
         self._status_left.setProperty("class", "status-label")
         status.addWidget(self._status_left)
-        
+
         spacer_status = QWidget()
         status.addPermanentWidget(spacer_status, 1)
-        
+
         self._status_right = QLabel("V1.0.4   DOCUMENTATION   READY")
         self._status_right.setProperty("class", "status-label")
         status.addPermanentWidget(self._status_right)
@@ -160,5 +172,5 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(DARK_STYLESHEET if self._dark else LIGHT_STYLESHEET)
         for i in range(self._stack.count()):
             tab = self._stack.widget(i)
-            if hasattr(tab, 'apply_theme'):
+            if hasattr(tab, "apply_theme"):
                 tab.apply_theme(self._dark)
