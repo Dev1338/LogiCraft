@@ -277,7 +277,11 @@ class FSMTab(QWidget):
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
                 self._trace_table.setItem(r, c, item)
+        # Improve column sizing
+        header = self._trace_table.horizontalHeader()
+        header.setMinimumSectionSize(50)
         self._trace_table.resizeColumnsToContents()
+        header.setStretchLastSection(True)
 
         self._draw_fsm()
 

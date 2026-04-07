@@ -138,7 +138,11 @@ class SequentialTab(QWidget):
                 if val == "INVALID":
                     item.setForeground(Qt.GlobalColor.red)
                 self._state_table.setItem(r, c, item)
+        # Improve column sizing
+        header = self._state_table.horizontalHeader()
+        header.setMinimumSectionSize(50)
         self._state_table.resizeColumnsToContents()
+        header.setStretchLastSection(True)
 
         # hint
         if ff_type in ("D", "T"):

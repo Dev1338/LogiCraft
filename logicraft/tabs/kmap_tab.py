@@ -90,26 +90,49 @@ class KMapTab(QWidget):
         right = QWidget()
         right_lay = QVBoxLayout(right)
         right_lay.setContentsMargins(8, 8, 8, 8)
-        hdr = QHBoxLayout()
-        hdr.addWidget(QLabel("Karnaugh Map"))
-        hdr.addStretch()
 
-        right_lay.addLayout(hdr)
+        # View selector
+        self._view_stack = QGroupBox("Visualization")
+        v_lay = QVBoxLayout(self._view_stack)
+        hdr = QHBoxLayout()
+        self._view_combo = QComboBox()
+        self._view_combo.addItems(["K-Map View", "Logic Circuit"])
+        self._view_combo.currentIndexChanged.connect(self._on_view_changed)
+        hdr.addWidget(self._view_combo)
+        hdr.addStretch()
+        v_lay.addLayout(hdr)
+
         self.canvas = MplCanvas(self, width=8, height=6, dark=self._dark)
-        right_lay.addWidget(self.canvas)
+        v_lay.addWidget(self.canvas)
+        right_lay.addWidget(self._view_stack)
         splitter.addWidget(right)
         splitter.setSizes([400, 700])
 
         self._rebuild_table()
+        self._last_res = None
 
     def apply_theme(self, dark):
         self._dark = dark
         self.canvas.apply_theme(dark)
+        if self._last_res:
+            self._on_view_changed()
+
+    def _on_view_changed(self, idx=None):
+        if not self._last_res:
+            return
+        mode = self._view_combo.currentText()
+        if mode == "K-Map View":
+            self._draw_kmap(self._last_res)
+        else:
+            self._draw_circuit(self._last_res)
 
     def _on_var_changed(self, idx):
         self._n_vars = idx + 2
         self._outputs = [0] * (1 << self._n_vars)
+        self._last_res = None
         self._rebuild_table()
+        self.canvas.axes.clear()
+        self.canvas.draw()
 
     def _rebuild_table(self):
         n = self._n_vars
@@ -131,7 +154,12 @@ class KMapTab(QWidget):
             out_item.setFlags(out_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self._table.setItem(r, n, out_item)
 
+        # Improve column sizing
+        header = self._table.horizontalHeader()
+        for i in range(n + 1):
+            header.setMinimumSectionSize(50)
         self._table.resizeColumnsToContents()
+        header.setStretchLastSection(True)
 
     def _out_text(self, v):
         if v == -1:
@@ -149,8 +177,9 @@ class KMapTab(QWidget):
 
     def _solve(self):
         res = solve(self._n_vars, self._outputs)
+        self._last_res = res
         self._sop_label.setText(f"SOP: {res.sop_expression}")
-        self._draw_kmap(res)
+        self._on_view_changed()
 
     def _draw_kmap(self, res):
         from logicraft.theme import get_palette
@@ -218,7 +247,7 @@ class KMapTab(QWidget):
                 fontfamily="monospace",
             )
 
-        # Draw groups
+        # Draw groups with wrap-around support
         for imp, color in res.groups:
             cells = []
             for mt in imp.minterms:
@@ -233,26 +262,55 @@ class KMapTab(QWidget):
                 ci = res.col_labels.index(c_bits) if c_bits in res.col_labels else 0
                 cells.append((ri, ci))
 
-            if cells:
-                min_r = min(c[0] for c in cells)
-                max_r = max(c[0] for c in cells)
-                min_c = min(c[1] for c in cells)
-                max_c = max(c[1] for c in cells)
-                x = min_c * cell - 0.08
-                y = (rows - 1 - max_r) * cell - 0.08
-                w = (max_c - min_c + 1) * cell + 0.16
-                h = (max_r - min_r + 1) * cell + 0.16
-                ax.add_patch(
-                    mpatches.FancyBboxPatch(
-                        (x, y),
-                        w,
-                        h,
-                        boxstyle="round,pad=0.08",
-                        facecolor=color + "20",
-                        edgecolor=color,
-                        linewidth=2,
+            if not cells:
+                continue
+
+            ris = sorted(list(set(c[0] for c in cells)))
+            cis = sorted(list(set(c[1] for c in cells)))
+
+            def get_ranges(indices, total):
+                if not indices:
+                    return []
+                if len(indices) == total:
+                    return [(0, total - 1)]
+                # Check for wrap-around (toroidal)
+                if 0 in indices and (total - 1) in indices:
+                    # Find the gap
+                    gap_start = -1
+                    for i in range(total):
+                        if i not in indices:
+                            gap_start = i
+                            break
+                    if gap_start != -1:
+                        # Find the next segment start
+                        last_part_start = -1
+                        for i in range(gap_start, total):
+                            if i in indices:
+                                last_part_start = i
+                                break
+                        return [(0, gap_start - 1), (last_part_start, total - 1)]
+                return [(min(indices), max(indices))]
+
+            row_ranges = get_ranges(ris, rows)
+            col_ranges = get_ranges(cis, cols)
+
+            for rr_start, rr_end in row_ranges:
+                for cr_start, cr_end in col_ranges:
+                    x = cr_start * cell - 0.08
+                    y = (rows - 1 - rr_end) * cell - 0.08
+                    w = (cr_end - cr_start + 1) * cell + 0.16
+                    h = (rr_end - rr_start + 1) * cell + 0.16
+                    ax.add_patch(
+                        mpatches.FancyBboxPatch(
+                            (x, y),
+                            w,
+                            h,
+                            boxstyle="round,pad=0.08",
+                            facecolor=color + "20",
+                            edgecolor=color,
+                            linewidth=2,
+                        )
                     )
-                )
 
         ax.set_xlim(-0.8, cols * cell + 0.5)
         ax.set_ylim(-0.5, rows * cell + 0.6)
@@ -280,6 +338,143 @@ class KMapTab(QWidget):
             )
 
         self.canvas.fig.tight_layout()
+        self.canvas.draw()
+
+    def _draw_circuit(self, res):
+        """Logic Gate Visualization for the SOP expression."""
+        from logicraft.theme import get_palette
+        import matplotlib.patches as mpatches
+        import matplotlib.path as mpath
+        import numpy as np
+
+        p = get_palette(self._dark)
+        ax = self.canvas.axes
+        ax.clear()
+
+        n = self._n_vars
+        terms = res.essential_implicants
+        if not terms:
+            ax.text(0.5, 0.5, "OUTPUT (F) = 0", ha="center", va="center", fontsize=18, fontweight="bold", color=p.on_surface, transform=ax.transAxes)
+            ax.set_axis_off()
+            self.canvas.draw()
+            return
+        
+        # If result is "1" (always high)
+        if len(terms) == 1 and not (terms[0].mask ^ ((1 << n) - 1)):
+             ax.text(0.5, 0.5, "OUTPUT (F) = 1 (VCC)", ha="center", va="center", fontsize=18, fontweight="bold", color=p.on_surface, transform=ax.transAxes)
+             ax.set_axis_off()
+             self.canvas.draw()
+             return
+
+        var_names = [chr(65 + i) for i in range(n)]
+        
+        # Layout constants
+        x_start = 1.0
+        x_and = 4.0
+        x_or = 7.5
+        x_end = 9.5
+        
+        y_step = 2.0
+        total_height = max(len(terms), n) * y_step + 2.0
+        
+        # Draw Inputs (A, B, C, D)
+        var_y = {}
+        for i in range(n):
+            y = total_height - (i + 1) * (total_height / (n + 1))
+            var_y[i] = y
+            ax.text(x_start - 0.5, y, var_names[i], ha="right", va="center", fontsize=14, fontweight="bold", color=p.on_surface)
+            ax.plot([x_start - 0.2, x_start + 1.5], [y, y], color=p.outline, linewidth=2, zorder=1)
+
+        # Helper to draw AND gate
+        def draw_and(x, y, color=p.primary):
+            w, h = 1.2, 1.4
+            # Rectangle part
+            rect = mpatches.Rectangle((x - w/2, y - h/2), w/2, h, facecolor=color+"30", edgecolor=color, linewidth=2, zorder=2)
+            ax.add_patch(rect)
+            # Semicircle part
+            theta = np.linspace(-np.pi/2, np.pi/2, 20)
+            arc_x = x + np.cos(theta) * (h/2) - 0.6
+            arc_y = y + np.sin(theta) * (h/2)
+            ax.plot(arc_x, arc_y, color=color, linewidth=2, zorder=2)
+            ax.fill(arc_x, arc_y, color=color+"30", zorder=2)
+            return x + h/2 - 0.6, y # output point
+
+        # Helper to draw OR gate
+        def draw_or(x, y, color=p.secondary):
+            w, h = 1.4, 1.6
+            # Curved triangle shape for OR
+            t = np.linspace(-1, 1, 30)
+            # Left curve
+            lx = x - w/2 + 0.3 * (1 - t**2)
+            ly = y + (h/2) * t
+            # Right point curves
+            rx = x - w/2 + 0.3 * (1 - t**2) + w * (1 - t**2) # This is wrong, let's simplify
+            
+            # Simple OR path
+            path_data = [
+                (mpath.Path.MOVETO, [x - w/2, y + h/2]),
+                (mpath.Path.CURVE3, [x - w/4, y]),
+                (mpath.Path.LINETO, [x - w/2, y - h/2]),
+                (mpath.Path.CURVE3, [x + w/2, y]),
+                (mpath.Path.CURVE3, [x - w/2, y + h/2]),
+            ]
+            codes, verts = zip(*path_data)
+            path = mpath.Path(verts, codes)
+            ax.add_patch(mpatches.PathPatch(path, facecolor=color+"30", edgecolor=color, linewidth=2, zorder=2))
+            return x + w/2, y
+
+        # Draw AND gates for each term
+        and_outputs = []
+        for j, imp in enumerate(terms):
+            y_and = total_height - (j + 1) * (total_height / (len(terms) + 1))
+            
+            # Find literals
+            literals = []
+            for i in range(n):
+                bit_pos = n - 1 - i
+                if not (imp.mask >> bit_pos & 1):
+                    is_true = (imp.value >> bit_pos) & 1
+                    literals.append((i, is_true))
+            
+            if len(literals) > 1:
+                out_x, out_y = draw_and(x_and, y_and)
+                and_outputs.append((out_x, out_y))
+                
+                for k, (var_idx, is_true) in enumerate(literals):
+                    in_y = y_and + (len(literals)/2 - k - 0.5) * 0.4
+                    y_src = var_y[var_idx]
+                    ax.plot([x_start + 1.5, x_and - 0.6], [y_src, in_y], color=p.outline, alpha=0.4, zorder=1)
+                    if not is_true:
+                        ax.add_patch(mpatches.Circle((x_and - 1.2, (y_src + in_y * 2)/3), 0.1, facecolor=p.surface, edgecolor=p.error, linewidth=1.5, zorder=3))
+            elif len(literals) == 1:
+                var_idx, is_true = literals[0]
+                y_src = var_y[var_idx]
+                ax.plot([x_start + 1.5, x_or - 0.7], [y_src, y_and], color=p.outline, zorder=1)
+                if not is_true:
+                     ax.add_patch(mpatches.Circle((x_start + 2.5, (y_src + y_and)/2), 0.1, facecolor=p.surface, edgecolor=p.error, linewidth=1.5, zorder=3))
+                and_outputs.append((x_or - 0.7, y_and))
+            else:
+                # result = 1 case handled above
+                pass
+
+        # Draw OR gate
+        if len(and_outputs) > 1:
+            y_or = total_height / 2
+            out_x, out_y = draw_or(x_or, y_or)
+            for ox, oy in and_outputs:
+                ax.plot([ox, x_or - 0.7], [oy, y_or], color=p.outline, alpha=0.6, zorder=1)
+            ax.plot([out_x, x_end], [out_y, out_y], color=p.secondary, linewidth=3, zorder=1)
+            ax.text(x_end + 0.2, out_y, "F", color=p.secondary, fontsize=16, fontweight="bold", va="center")
+        elif len(and_outputs) == 1:
+            ox, oy = and_outputs[0]
+            ax.plot([ox, x_end], [oy, oy], color=p.secondary, linewidth=3, zorder=1)
+            ax.text(x_end + 0.2, oy, "F", color=p.secondary, fontsize=16, fontweight="bold", va="center")
+
+        ax.set_xlim(0, x_end + 1)
+        ax.set_ylim(0, total_height)
+        ax.set_aspect("equal")
+        ax.axis("off")
+        ax.set_title(f"Logic Gate Diagram (SOP: {res.sop_expression})", fontsize=14, fontweight="bold", color=p.on_surface, pad=20)
         self.canvas.draw()
 
     def _export_csv(self):
